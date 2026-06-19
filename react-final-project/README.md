@@ -24,7 +24,6 @@ O projeto foi desenvolvido como atividade final do módulo de React, aplicando c
 * Vite
 * React Router DOM
 * Styled Components
-* Axios
 * Context API
 * useReducer
 
@@ -138,5 +137,4 @@ https://www.themealdb.com
 
 Projeto hospedado em:
 
-* Vercel (opcional)
-* Netlify (opcional)
+* Vercel 
