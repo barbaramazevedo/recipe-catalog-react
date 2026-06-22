@@ -6,6 +6,7 @@ import GlobalStyles from './styles/GlobalStyles'
 import AppRoutes from './routes/AppRoutes'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import { RecipeProvider } from './context/RecipeContext'
 
 const Layout = styled.div`
   display: flex;
@@ -21,15 +22,17 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
-      <BrowserRouter>
-        <Layout>
-          <Header />
-          <Main>
-            <AppRoutes />
-          </Main>
-          <Footer />
-        </Layout>
-      </BrowserRouter>
+      <RecipeProvider>
+        <BrowserRouter>
+          <Layout>
+            <Header />
+            <Main>
+              <AppRoutes />
+            </Main>
+            <Footer />
+          </Layout>
+        </BrowserRouter>
+      </RecipeProvider>
     </ThemeProvider>
   )
 }
