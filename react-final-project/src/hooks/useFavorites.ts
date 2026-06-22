@@ -1,44 +1,21 @@
-import { useState } from 'react'
+import { useRecipeContext } from '../context/RecipeContext'
+import { ADD_FAVORITE, REMOVE_FAVORITE } from '../context/actions'
 import type { Meal } from '../services/recipeApi'
 
-const STORAGE_KEY = 'favorites'
-
-function loadFromStorage(): Meal[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveToStorage(meals: Meal[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(meals))
-}
-
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<Meal[]>(loadFromStorage)
+  const { state, dispatch } = useRecipeContext()
 
   function addFavorite(meal: Meal) {
-    setFavorites(prev => {
-      if (prev.some(m => m.idMeal === meal.idMeal)) return prev
-      const updated = [...prev, meal]
-      saveToStorage(updated)
-      return updated
-    })
+    dispatch({ type: ADD_FAVORITE, payload: meal })
   }
 
   function removeFavorite(id: string) {
-    setFavorites(prev => {
-      const updated = prev.filter(m => m.idMeal !== id)
-      saveToStorage(updated)
-      return updated
-    })
+    dispatch({ type: REMOVE_FAVORITE, payload: id })
   }
 
   function isFavorite(id: string): boolean {
-    return favorites.some(m => m.idMeal === id)
+    return state.favorites.some(m => m.idMeal === id)
   }
 
-  return { favorites, addFavorite, removeFavorite, isFavorite }
+  return { favorites: state.favorites, addFavorite, removeFavorite, isFavorite }
 }
