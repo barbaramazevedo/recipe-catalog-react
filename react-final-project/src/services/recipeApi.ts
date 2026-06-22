@@ -28,3 +28,15 @@ export async function getMealById(id: string): Promise<Meal | null> {
   const data: MealsResponse = await res.json()
   return data.meals ? data.meals[0] : null
 }
+
+export async function searchMealsByName(query: string, signal?: AbortSignal): Promise<Meal[]> {
+  const res = await fetch(`${BASE_URL}/search.php?s=${encodeURIComponent(query)}`, { signal })
+  const data: MealsResponse = await res.json()
+  return data.meals ?? []
+}
+
+export async function getMealsByCategory(category: string, signal?: AbortSignal): Promise<Meal[]> {
+  const res = await fetch(`${BASE_URL}/filter.php?c=${encodeURIComponent(category)}`, { signal })
+  const data: MealsResponse = await res.json()
+  return data.meals ?? []
+}
