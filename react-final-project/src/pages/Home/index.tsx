@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 import styled from 'styled-components'
-import { getRandomMeals } from '../../services/recipeApi'
-import type { Meal } from '../../services/recipeApi'
+import { useRecipes } from '../../hooks/useRecipes'
 import Loading from '../../components/Loading'
 import ErrorMessage from '../../components/ErrorMessage'
+import SearchBar from '../../components/SearchBar'
 
 const Wrapper = styled.main`
   max-width: 1100px;
@@ -11,10 +11,10 @@ const Wrapper = styled.main`
   padding: 24px 16px;
 `
 
-const Header = styled.div`
+const Toolbar = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 `
 
 const RefreshButton = styled.button`
@@ -62,61 +62,60 @@ const Card = styled.a`
   }
 `
 
-const CACHE_KEY = 'home_meals'
+const Empty = styled.p`
+  text-align: center;
+  color: #888;
+  margin-top: 40px;
+`
 
 export default function Home() {
-  const [meals, setMeals] = useState<Meal[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    recipes,
+    loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    search,
+    fetchRandom,
+  } = useRecipes()
 
-  const fetchMeals = useCallback((signal: AbortSignal) => {
-    setLoading(true)
-    setError(null)
-    getRandomMeals(12, signal)
-      .then(results => {
-        const unique = results.filter(
-          (meal, i, arr) => arr.findIndex(m => m.idMeal === meal.idMeal) === i
-        )
-        sessionStorage.setItem(CACHE_KEY, JSON.stringify(unique))
-        setMeals(unique)
-      })
-      .catch(err => {
-        if (err.name !== 'AbortError') setError('The recipes could not be loaded.')
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => {
-    const cached = sessionStorage.getItem(CACHE_KEY)
-    if (cached) {
-      setMeals(JSON.parse(cached))
+  const handleSearch = useCallback(() => {
+    if (!searchQuery.trim()) {
+      const controller = new AbortController()
+      fetchRandom(controller.signal)
       return
     }
     const controller = new AbortController()
-    fetchMeals(controller.signal)
-    return () => controller.abort()
-  }, [fetchMeals])
+    search(searchQuery.trim(), controller.signal)
+  }, [searchQuery, search, fetchRandom])
 
   function handleRefresh() {
-    sessionStorage.removeItem(CACHE_KEY)
+    setSearchQuery('')
+    sessionStorage.removeItem('home_meals')
     const controller = new AbortController()
-    fetchMeals(controller.signal)
+    fetchRandom(controller.signal)
   }
 
   return (
     <Wrapper>
-      <Header>
+      <SearchBar value={searchQuery} onChange={setSearchQuery} onSearch={handleSearch} />
+
+      <Toolbar>
         <RefreshButton onClick={handleRefresh} disabled={loading}>
           {loading ? 'Loading...' : 'Try new recipes'}
         </RefreshButton>
-      </Header>
+      </Toolbar>
 
       {loading && <Loading />}
       {error && <ErrorMessage message={error} />}
 
-      {!loading && !error && (
+      {!loading && !error && recipes.length === 0 && (
+        <Empty>No recipes found.</Empty>
+      )}
+
+      {!loading && !error && recipes.length > 0 && (
         <Grid>
-          {meals.map(meal => (
+          {recipes.map(meal => (
             <Card key={meal.idMeal} href={`/recipe/${meal.idMeal}`}>
               <img src={meal.strMealThumb} alt={meal.strMeal} />
               <p>{meal.strMeal}</p>
